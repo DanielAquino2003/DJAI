@@ -43,12 +43,12 @@
     "README.md",
     "LICENSE"
   ],
-  "homepage": "https://github.com/DanielAquino2003/djai#readme",
+  "homepage": "https://github.com/DanielAquino2003/DJ.AI#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DanielAquino2003/djai.git"
+    "url": "git+https://github.com/DanielAquino2003/DJ.AI.git"
   },
   "bugs": {
-    "url": "https://github.com/DanielAquino2003/djai/issues"
+    "url": "https://github.com/DanielAquino2003/DJ.AI/issues"
   }
 }

@@ -33,8 +33,8 @@ Copy the app client ID. A client secret is not required because DJAI uses OAuth 
 ## Install from source
 
 ```bash
-git clone https://github.com/DanielAquino2003/djai.git
-cd djai
+git clone https://github.com/DanielAquino2003/DJ.AI.git
+cd DJ.AI
 npm install
 cp .env.example .env
 ```

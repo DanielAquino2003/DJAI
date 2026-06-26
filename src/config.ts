@@ -1,26 +1,51 @@
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import "dotenv/config";
 
 export const DEFAULT_REDIRECT_URI = "http://127.0.0.1:8765/callback";
+export const DJAI_CONFIG_PATH = process.env.DJAI_CONFIG_PATH ?? join(homedir(), ".djai", "config.json");
 
 export type AppConfig = {
   clientId: string;
   redirectUri: string;
   tokenPath: string;
+  configPath: string;
 };
 
+export type UserConfig = {
+  spotifyClientId?: string;
+  spotifyRedirectUri?: string;
+  tokenPath?: string;
+};
+
+export function readUserConfig(): UserConfig {
+  try {
+    return JSON.parse(readFileSync(DJAI_CONFIG_PATH, "utf8")) as UserConfig;
+  } catch {
+    return {};
+  }
+}
+
 export function getConfig(): AppConfig {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const userConfig = readUserConfig();
+  const clientId = process.env.SPOTIFY_CLIENT_ID ?? userConfig.spotifyClientId;
 
   if (!clientId) {
-    throw new Error("Missing SPOTIFY_CLIENT_ID. Create a Spotify app and export SPOTIFY_CLIENT_ID.");
+    throw new Error(
+      "Missing Spotify client ID. Run djai-auth and paste your Spotify app Client ID, or set SPOTIFY_CLIENT_ID."
+    );
   }
 
   return {
     clientId,
-    redirectUri: process.env.SPOTIFY_REDIRECT_URI ?? DEFAULT_REDIRECT_URI,
-    tokenPath: process.env.DJAI_TOKEN_PATH ?? process.env.SPO_MCP_TOKEN_PATH ?? join(homedir(), ".djai", "token.json")
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI ?? userConfig.spotifyRedirectUri ?? DEFAULT_REDIRECT_URI,
+    tokenPath:
+      process.env.DJAI_TOKEN_PATH ??
+      process.env.SPO_MCP_TOKEN_PATH ??
+      userConfig.tokenPath ??
+      join(homedir(), ".djai", "token.json"),
+    configPath: DJAI_CONFIG_PATH
   };
 }
 

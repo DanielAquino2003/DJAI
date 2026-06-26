@@ -20,15 +20,28 @@ DJAI is not affiliated with Spotify. Spotify Premium is required for playback-co
 - A Spotify developer app
 - Spotify Premium for playback control tools such as play, pause, queue, and next track
 
-## Spotify app setup
+## Quick setup
 
-Create an app at <https://developer.spotify.com/dashboard> and add this redirect URI:
+1. Create a Spotify app at <https://developer.spotify.com/dashboard>.
+2. Add this redirect URI exactly:
 
 ```text
 http://127.0.0.1:8765/callback
 ```
 
-Copy the app client ID. A client secret is not required because DJAI uses OAuth PKCE. The auth flow requests playlist read/write scopes, including `playlist-read-private` and `playlist-read-collaborative`.
+3. Run the auth wizard and paste your Spotify Client ID when prompted:
+
+```bash
+npx djai-auth
+```
+
+DJAI stores non-secret config at `~/.djai/config.json` and OAuth tokens at `~/.djai/token.json`. A client secret is not required because DJAI uses OAuth PKCE.
+
+You can also run it non-interactively:
+
+```bash
+npx djai-auth --client-id your-client-id
+```
 
 ## Install from source
 
@@ -36,14 +49,6 @@ Copy the app client ID. A client secret is not required because DJAI uses OAuth 
 git clone https://github.com/DanielAquino2003/DJ.AI.git
 cd DJ.AI
 npm install
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```bash
-SPOTIFY_CLIENT_ID=your-client-id
-SPOTIFY_REDIRECT_URI=http://127.0.0.1:8765/callback
 ```
 
 Authenticate:
@@ -52,7 +57,9 @@ Authenticate:
 npm run auth
 ```
 
-The auth flow stores tokens at `~/.djai/token.json` by default. Override with `DJAI_TOKEN_PATH`.
+The wizard saves your Spotify Client ID to `~/.djai/config.json`, so you do not need a `.env` file for normal use.
+
+The auth flow stores tokens at `~/.djai/token.json` by default. Override with `DJAI_TOKEN_PATH` if needed.
 
 Build:
 
@@ -152,10 +159,16 @@ Playback control requires Spotify Premium and an active device. If you add new s
 
 ## Package usage after npm publish
 
-After publishing, users will be able to run auth with:
+Users can run auth with:
 
 ```bash
-SPOTIFY_CLIENT_ID=your-client-id npx djai-auth
+npx djai-auth
+```
+
+or:
+
+```bash
+npx djai-auth --client-id your-client-id
 ```
 
 And configure their MCP client with:
@@ -166,10 +179,7 @@ And configure their MCP client with:
     "djai": {
       "command": "npx",
       "args": ["-y", "djai"],
-      "env": {
-        "SPOTIFY_CLIENT_ID": "your-client-id"
-      }
-    }
+          }
   }
 }
 ```

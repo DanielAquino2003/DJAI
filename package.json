@@ -1,10 +1,10 @@
 {
   "name": "djai",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "DJAI: Spotify MCP server for agent-controlled playback, playlist workflows, and prompt-based music curation.",
   "type": "module",
   "bin": {
-    "djai": "./dist/server.js",
+    "djai": "./dist/cli.js",
     "djai-auth": "./dist/auth.js"
   },
   "scripts": {

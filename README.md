@@ -69,13 +69,18 @@ npm run build
 
 ## Configure Codex
 
-Add this to `~/.codex/config.toml`:
+Run:
+
+```bash
+npx djai setup codex
+```
+
+This adds DJAI to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.djai]
-command = "node"
-args = ["/absolute/path/to/djai/dist/server.js"]
-cwd = "/absolute/path/to/djai"
+command = "npx"
+args = ["-y", "djai"]
 startup_timeout_sec = 10
 tool_timeout_sec = 120
 ```
@@ -96,9 +101,8 @@ Use a stdio MCP server config like this:
 {
   "mcpServers": {
     "djai": {
-      "command": "node",
-      "args": ["/absolute/path/to/djai/dist/server.js"],
-      "cwd": "/absolute/path/to/djai"
+      "command": "npx",
+      "args": ["-y", "djai"]
     }
   }
 }

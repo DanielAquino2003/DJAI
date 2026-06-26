@@ -1,0 +1,54 @@
+{
+  "name": "djai",
+  "version": "0.3.0",
+  "description": "DJAI: Spotify MCP server for agent-controlled playback, playlist workflows, and prompt-based music curation.",
+  "type": "module",
+  "bin": {
+    "djai": "./dist/server.js",
+    "djai-auth": "./dist/auth.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/server.ts",
+    "auth": "tsx src/auth.ts",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck",
+    "prepack": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "spotify",
+    "model-context-protocol",
+    "playlist",
+    "music",
+    "djai"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "dotenv": "^17.4.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.20.3",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "homepage": "https://github.com/DanielAquino2003/djai#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanielAquino2003/djai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DanielAquino2003/djai/issues"
+  }
+}

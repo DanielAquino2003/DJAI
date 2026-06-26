@@ -475,7 +475,16 @@ export class SpotifyClient {
       }
       throw new Error("Spotify API error " + response.status + ": " + detail);
     }
-    return (await response.json()) as T;
+
+    const raw = await response.text();
+    if (!raw.trim()) return { ok: true } as T;
+
+    try {
+      return JSON.parse(raw) as T;
+    } catch (error) {
+      if (options.allowNoContent) return { ok: true } as T;
+      throw new Error("Spotify API returned non-JSON response: " + raw.slice(0, 200));
+    }
   }
 }
 

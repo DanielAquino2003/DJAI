@@ -87,7 +87,8 @@ type RawPlaylistItem = {
   added_at: string | null;
   added_by?: { id?: string };
   is_local?: boolean;
-  track: RawTrack | null;
+  track?: RawTrack | null;
+  item?: RawTrack | null;
 };
 
 type RawTrack = {
@@ -164,7 +165,7 @@ export class SpotifyClient {
   async getPlaylistTracks(playlistId: string, params: { limit?: number; offset?: number; market?: string } = {}): Promise<{ total: number; limit: number; offset: number; items: SpotifyPlaylistTrack[] }> {
     const query = new URLSearchParams({ limit: String(clamp(params.limit ?? 100, 1, 100)), offset: String(Math.max(params.offset ?? 0, 0)) });
     if (params.market) query.set("market", params.market);
-    const result = await this.request<Paging<RawPlaylistItem>>("/playlists/" + encodeURIComponent(playlistId) + "/tracks?" + query.toString());
+    const result = await this.request<Paging<RawPlaylistItem>>("/playlists/" + encodeURIComponent(playlistId) + "/items?" + query.toString());
     return { total: result.total, limit: result.limit, offset: result.offset, items: result.items.filter(Boolean).map(toPlaylistTrack) };
   }
 
@@ -224,15 +225,20 @@ export class SpotifyClient {
     const tracks = await this.getAllPlaylistTracks(playlistId, market);
     const seen = new Set<string>();
     const duplicateUris: string[] = [];
+    const keptUris: string[] = [];
     for (const item of tracks) {
       const track = item.track;
       if (!track) continue;
       const key = track.id || normalizeText(track.artists.join(",") + ":" + track.name);
       if (seen.has(key)) duplicateUris.push(track.uri);
-      else seen.add(key);
+      else {
+        seen.add(key);
+        keptUris.push(track.uri);
+      }
     }
-    for (const chunk of chunkArray(duplicateUris, 100)) {
-      await this.request("/playlists/" + encodeURIComponent(playlistId) + "/tracks", { method: "DELETE", body: { tracks: chunk.map((uri) => ({ uri })) } });
+    if (duplicateUris.length > 0) {
+      await this.request("/playlists/" + encodeURIComponent(playlistId) + "/items", { method: "PUT", body: { uris: keptUris.slice(0, 100) } });
+      for (const chunk of chunkArray(keptUris.slice(100), 100)) await this.addTracksToPlaylist(playlistId, chunk);
     }
     return { removed: duplicateUris.length, kept: seen.size, duplicateUris };
   }
@@ -266,7 +272,7 @@ export class SpotifyClient {
   }
 
   async searchTracks(query: string, limit = 10, market?: string): Promise<SpotifyTrack[]> {
-    const params = new URLSearchParams({ q: query, type: "track", limit: String(clamp(limit, 1, 50)) });
+    const params = new URLSearchParams({ q: query, type: "track", limit: String(clamp(limit, 1, 10)) });
     if (market) params.set("market", market);
     const result = await this.request<{ tracks: { items: RawTrack[] } }>("/search?" + params.toString());
     return result.tracks.items.map(toTrack);
@@ -280,7 +286,9 @@ export class SpotifyClient {
   }
 
   async saveTracks(ids: string[]) {
-    return this.request("/me/tracks", { method: "PUT", body: { ids }, allowNoContent: true });
+    const uris = ids.map((id) => id.startsWith("spotify:") ? id : "spotify:track:" + id);
+    const params = new URLSearchParams({ uris: uris.slice(0, 40).join(",") });
+    return this.request("/me/library?" + params.toString(), { method: "PUT", allowNoContent: true });
   }
 
   async recentlyPlayed(limit = 20) {
@@ -308,12 +316,12 @@ export class SpotifyClient {
     return { total: result.artists.total, limit: result.artists.limit, items: result.artists.items.map(toArtist), cursors: result.artists.cursors };
   }
 
-  async createPlaylist(userId: string, params: { name: string; description?: string; public?: boolean }) {
-    return this.request<{ id: string; uri: string; external_urls?: { spotify?: string } }>("/users/" + encodeURIComponent(userId) + "/playlists", { method: "POST", body: { name: params.name, description: params.description ?? "", public: params.public ?? false } });
+  async createPlaylist(_userId: string, params: { name: string; description?: string; public?: boolean }) {
+    return this.request<{ id: string; uri: string; external_urls?: { spotify?: string } }>("/me/playlists", { method: "POST", body: { name: params.name, description: params.description ?? "", public: params.public ?? false } });
   }
 
   async addTracksToPlaylist(playlistId: string, uris: string[]) {
-    return this.request("/playlists/" + encodeURIComponent(playlistId) + "/tracks", { method: "POST", body: { uris } });
+    return this.request("/playlists/" + encodeURIComponent(playlistId) + "/items", { method: "POST", body: { uris } });
   }
 
   async addToQueue(uri: string, deviceId?: string) {
@@ -493,7 +501,7 @@ function toPlaylistSummary(playlist: RawPlaylist): SpotifyPlaylistSummary {
 }
 
 function toPlaylistTrack(item: RawPlaylistItem): SpotifyPlaylistTrack {
-  const track = item.track;
+  const track = item.track ?? item.item ?? null;
   return { added_at: item.added_at, added_by_id: item.added_by?.id, is_local: item.is_local, track: track && (!track.type || track.type === "track") ? toTrack(track) : null };
 }
 

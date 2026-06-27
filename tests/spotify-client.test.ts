@@ -60,6 +60,140 @@ test("SpotifyClient sends bearer auth and maps device responses", async () => {
   );
 });
 
+test("SpotifyClient creates playlists through the current-user endpoint", async () => {
+  await withSpotifyClient(
+    async (calls) => {
+      const { SpotifyClient } = await import("../src/spotify.js");
+      const client = new SpotifyClient();
+      const playlist = await client.createPlaylist("legacy-user-id", {
+        name: "Workout",
+        description: "Training tracks",
+        public: false
+      });
+
+      assert.deepEqual(playlist, { id: "playlist-id", uri: "spotify:playlist:playlist-id" });
+      assert.equal(calls[0]?.url, "https://api.spotify.com/v1/me/playlists");
+      assert.equal(calls[0]?.init?.method, "POST");
+      assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), {
+        name: "Workout",
+        description: "Training tracks",
+        public: false
+      });
+    },
+    [Response.json({ id: "playlist-id", uri: "spotify:playlist:playlist-id" }, { status: 201 })]
+  );
+});
+
+test("SpotifyClient adds playlist tracks through the items endpoint", async () => {
+  await withSpotifyClient(
+    async (calls) => {
+      const { SpotifyClient } = await import("../src/spotify.js");
+      const client = new SpotifyClient();
+      const result = await client.addTracksToPlaylist("playlist-id", ["spotify:track:123"]);
+
+      assert.deepEqual(result, { snapshot_id: "snapshot" });
+      assert.equal(calls[0]?.url, "https://api.spotify.com/v1/playlists/playlist-id/items");
+      assert.equal(calls[0]?.init?.method, "POST");
+      assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), { uris: ["spotify:track:123"] });
+    },
+    [Response.json({ snapshot_id: "snapshot" }, { status: 201 })]
+  );
+});
+
+test("SpotifyClient reads playlist tracks through the items endpoint", async () => {
+  await withSpotifyClient(
+    async (calls) => {
+      const { SpotifyClient } = await import("../src/spotify.js");
+      const client = new SpotifyClient();
+      const page = await client.getPlaylistTracks("playlist-id", { limit: 10, offset: 0, market: "ES" });
+
+      assert.equal(page.total, 1);
+      assert.equal(page.items[0]?.track?.name, "Track Name");
+      assert.equal(calls[0]?.url, "https://api.spotify.com/v1/playlists/playlist-id/items?limit=10&offset=0&market=ES");
+    },
+    [Response.json({
+      href: "",
+      limit: 10,
+      next: null,
+      offset: 0,
+      previous: null,
+      total: 1,
+      items: [{
+        added_at: "2026-01-01T00:00:00Z",
+        added_by: { id: "user" },
+        is_local: false,
+        item: {
+          id: "track-id",
+          type: "track",
+          uri: "spotify:track:track-id",
+          name: "Track Name",
+          artists: [{ name: "Artist" }],
+          album: { name: "Album" },
+          duration_ms: 180000,
+          external_urls: { spotify: "https://open.spotify.com/track/track-id" }
+        }
+      }]
+    })]
+  );
+});
+
+test("SpotifyClient clamps search track limit to Spotify's accepted maximum", async () => {
+  await withSpotifyClient(
+    async (calls) => {
+      const { SpotifyClient } = await import("../src/spotify.js");
+      const client = new SpotifyClient();
+      await client.searchTracks("workout", 50, "ES");
+
+      assert.equal(calls[0]?.url, "https://api.spotify.com/v1/search?q=workout&type=track&limit=10&market=ES");
+    },
+    [Response.json({ tracks: { items: [] } })]
+  );
+});
+
+test("SpotifyClient removes duplicate playlist tracks by replacing items with unique URIs", async () => {
+  await withSpotifyClient(
+    async (calls) => {
+      const { SpotifyClient } = await import("../src/spotify.js");
+      const client = new SpotifyClient();
+      const result = await client.removeDuplicatePlaylistTracks("playlist-id", "ES");
+
+      assert.deepEqual(result, { removed: 1, kept: 2, duplicateUris: ["spotify:track:a"] });
+      assert.equal(calls[0]?.url, "https://api.spotify.com/v1/playlists/playlist-id/items?limit=100&offset=0&market=ES");
+      assert.equal(calls[1]?.url, "https://api.spotify.com/v1/playlists/playlist-id/items");
+      assert.equal(calls[1]?.init?.method, "PUT");
+      assert.deepEqual(JSON.parse(String(calls[1]?.init?.body)), { uris: ["spotify:track:a", "spotify:track:b"] });
+    },
+    [Response.json({
+      href: "",
+      limit: 100,
+      next: null,
+      offset: 0,
+      previous: null,
+      total: 3,
+      items: [
+        { added_at: null, item: { id: "a", uri: "spotify:track:a", name: "A", artists: [{ name: "Artist" }], album: { name: "Album" }, duration_ms: 1 } },
+        { added_at: null, item: { id: "b", uri: "spotify:track:b", name: "B", artists: [{ name: "Artist" }], album: { name: "Album" }, duration_ms: 1 } },
+        { added_at: null, item: { id: "a", uri: "spotify:track:a", name: "A", artists: [{ name: "Artist" }], album: { name: "Album" }, duration_ms: 1 } }
+      ]
+    }), Response.json({ snapshot_id: "snapshot" })]
+  );
+});
+
+test("SpotifyClient saves tracks through the current library endpoint", async () => {
+  await withSpotifyClient(
+    async (calls) => {
+      const { SpotifyClient } = await import("../src/spotify.js");
+      const client = new SpotifyClient();
+      const result = await client.saveTracks(["track-id", "spotify:track:other-id"]);
+
+      assert.deepEqual(result, { ok: true });
+      assert.equal(calls[0]?.url, "https://api.spotify.com/v1/me/library?uris=spotify%3Atrack%3Atrack-id%2Cspotify%3Atrack%3Aother-id");
+      assert.equal(calls[0]?.init?.method, "PUT");
+    },
+    [new Response(null, { status: 204 })]
+  );
+});
+
 test("SpotifyClient returns ok for empty successful playback responses", async () => {
   await withSpotifyClient(
     async () => {

@@ -8,6 +8,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { URL } from "node:url";
 import { DEFAULT_REDIRECT_URI, DJAI_CONFIG_PATH, getConfig, readUserConfig, SPOTIFY_SCOPES, UserConfig } from "./config.js";
 import { writeToken } from "./token-store.js";
+import { renderBrandHeader } from "./brand.js";
 
 function base64Url(input: Buffer): string {
   return input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -35,7 +36,7 @@ async function saveUserConfig(config: UserConfig) {
 async function ensureConfig() {
   const args = parseArgs();
   if (args.help) {
-    console.error("DJAI auth\n\nUsage:\n  djai-auth\n  djai-auth --client-id <spotify-client-id>\n  djai-auth --client-id <spotify-client-id> --redirect-uri " + DEFAULT_REDIRECT_URI + "\n\nCreate a Spotify app at https://developer.spotify.com/dashboard and add this redirect URI:\n  " + DEFAULT_REDIRECT_URI);
+    console.error(renderBrandHeader() + "\n\nAuth setup\n\nUsage:\n  djai-auth\n  djai-auth --client-id <spotify-client-id>\n  djai-auth --client-id <spotify-client-id> --redirect-uri " + DEFAULT_REDIRECT_URI + "\n\nCreate a Spotify app at https://developer.spotify.com/dashboard and add this redirect URI:\n  " + DEFAULT_REDIRECT_URI);
     process.exit(0);
   }
 
@@ -43,7 +44,8 @@ async function ensureConfig() {
   const redirectUri = args.redirectUri ?? process.env.SPOTIFY_REDIRECT_URI ?? userConfig.spotifyRedirectUri ?? DEFAULT_REDIRECT_URI;
   const rl = createInterface({ input, output });
   try {
-    console.error("DJAI Spotify setup");
+    console.error(renderBrandHeader());
+    console.error("\nDJAI Spotify setup");
     console.error("1. Open https://developer.spotify.com/dashboard");
     console.error("2. Create or open an app");
     console.error("3. Add this Redirect URI exactly:");

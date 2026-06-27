@@ -4,11 +4,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderBrandHeader } from "./brand.js";
 
 const args = process.argv.slice(2);
 
 function usage() {
-  console.error("DJAI\n\nUsage:\n  djai                 Start the MCP server over stdio\n  djai setup codex     Add DJAI to ~/.codex/config.toml\n  djai help            Show this help\n\nAuth:\n  djai-auth            Configure Spotify OAuth");
+  console.error(renderBrandHeader() + "\n\nUsage:\n  djai                 Start the MCP server over stdio\n  djai setup codex     Add DJAI to ~/.codex/config.toml\n  djai help            Show this help\n\nAuth:\n  djai-auth            Configure Spotify OAuth");
 }
 
 async function readText(path: string): Promise<string> {

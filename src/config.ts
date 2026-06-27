@@ -28,8 +28,16 @@ export function readUserConfig(): UserConfig {
 }
 
 export function getConfig(): AppConfig {
-  const userConfig = readUserConfig();
-  const clientId = process.env.SPOTIFY_CLIENT_ID ?? userConfig.spotifyClientId;
+  return resolveConfig(process.env, readUserConfig(), homedir(), DJAI_CONFIG_PATH);
+}
+
+export function resolveConfig(
+  env: NodeJS.ProcessEnv,
+  userConfig: UserConfig,
+  homeDirectory: string,
+  configPath: string
+): AppConfig {
+  const clientId = env.SPOTIFY_CLIENT_ID ?? userConfig.spotifyClientId;
 
   if (!clientId) {
     throw new Error(
@@ -39,13 +47,13 @@ export function getConfig(): AppConfig {
 
   return {
     clientId,
-    redirectUri: process.env.SPOTIFY_REDIRECT_URI ?? userConfig.spotifyRedirectUri ?? DEFAULT_REDIRECT_URI,
+    redirectUri: env.SPOTIFY_REDIRECT_URI ?? userConfig.spotifyRedirectUri ?? DEFAULT_REDIRECT_URI,
     tokenPath:
-      process.env.DJAI_TOKEN_PATH ??
-      process.env.SPO_MCP_TOKEN_PATH ??
+      env.DJAI_TOKEN_PATH ??
+      env.SPO_MCP_TOKEN_PATH ??
       userConfig.tokenPath ??
-      join(homedir(), ".djai", "token.json"),
-    configPath: DJAI_CONFIG_PATH
+      join(homeDirectory, ".djai", "token.json"),
+    configPath
   };
 }
 

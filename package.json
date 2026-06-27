@@ -4,8 +4,8 @@
   "description": "DJAI: Spotify MCP server for agent-controlled playback, playlist workflows, and prompt-based music curation.",
   "type": "module",
   "bin": {
-    "djai": "./dist/cli.js",
-    "djai-auth": "./dist/auth.js"
+    "djai": "dist/cli.js",
+    "djai-auth": "dist/auth.js"
   },
   "scripts": {
     "build": "tsc",
@@ -13,7 +13,7 @@
     "auth": "tsx src/auth.ts",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck",
+    "test": "npm run typecheck && tsx --test tests/*.test.ts",
     "prepack": "npm run build"
   },
   "keywords": [

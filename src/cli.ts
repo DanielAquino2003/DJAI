@@ -1,7 +1,9 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const args = process.argv.slice(2);
 
@@ -17,7 +19,7 @@ async function readText(path: string): Promise<string> {
   }
 }
 
-function upsertCodexConfig(existing: string): string {
+export function upsertCodexConfig(existing: string): string {
   const block = [
     "[mcp_servers.djai]",
     'command = "npx"',
@@ -27,7 +29,7 @@ function upsertCodexConfig(existing: string): string {
     ""
   ].join("\n");
 
-  const tablePattern = /^\[mcp_servers\.djai\]\n(?:^[^\[].*\n?)*/m;
+  const tablePattern = /^\[mcp_servers\.djai\]\n(?:^(?!\[)[^\n]*\n?)*/m;
   if (tablePattern.test(existing)) return existing.replace(tablePattern, block);
 
   const trimmed = existing.trimEnd();
@@ -65,7 +67,14 @@ async function main() {
   process.exit(1);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+function isDirectRun(entryPoint: string | undefined): boolean {
+  if (!entryPoint) return false;
+  return realpathSync(entryPoint) === realpathSync(fileURLToPath(import.meta.url));
+}
+
+if (isDirectRun(process.argv[1])) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}

@@ -23,7 +23,7 @@ export function upsertCodexConfig(existing: string): string {
   const block = [
     "[mcp_servers.djai]",
     'command = "npx"',
-    'args = ["-y", "djai"]',
+    'args = ["-y", "@daniel-aquino/djai"]',
     "startup_timeout_sec = 10",
     "tool_timeout_sec = 120",
     ""

@@ -47,7 +47,7 @@ Copy the app Client ID. DJAI uses OAuth PKCE, so no client secret is needed.
 Run the auth wizard:
 
 ```bash
-npx djai-auth
+npx --package @daniel-aquino/djai djai-auth
 ```
 
 Paste your Spotify Client ID when prompted, open the authorization URL, and approve the requested scopes.
@@ -55,13 +55,13 @@ Paste your Spotify Client ID when prompted, open the authorization URL, and appr
 You can also run the wizard non-interactively:
 
 ```bash
-npx djai-auth --client-id your-spotify-client-id
+npx --package @daniel-aquino/djai djai-auth --client-id your-spotify-client-id
 ```
 
 Or use a custom redirect URI if your Spotify app is configured for it:
 
 ```bash
-npx djai-auth --client-id your-spotify-client-id --redirect-uri http://127.0.0.1:8765/callback
+npx --package @daniel-aquino/djai djai-auth --client-id your-spotify-client-id --redirect-uri http://127.0.0.1:8765/callback
 ```
 
 DJAI stores local files under `~/.djai`:
@@ -76,7 +76,7 @@ Both files are written with owner-only permissions on POSIX systems.
 Run:
 
 ```bash
-npx djai setup codex
+npx --package @daniel-aquino/djai djai setup codex
 ```
 
 This updates `~/.codex/config.toml` with:
@@ -84,7 +84,7 @@ This updates `~/.codex/config.toml` with:
 ```toml
 [mcp_servers.djai]
 command = "npx"
-args = ["-y", "djai"]
+args = ["-y", "@daniel-aquino/djai"]
 startup_timeout_sec = 10
 tool_timeout_sec = 120
 ```
@@ -106,7 +106,7 @@ Use DJAI as a stdio MCP server:
   "mcpServers": {
     "djai": {
       "command": "npx",
-      "args": ["-y", "djai"]
+      "args": ["-y", "@daniel-aquino/djai"]
     }
   }
 }
@@ -117,25 +117,25 @@ If your client supports longer-running tools, set a timeout of at least 120 seco
 ## CLI Commands
 
 ```bash
-npx djai
+npx --package @daniel-aquino/djai djai
 ```
 
 Starts the MCP server over stdio.
 
 ```bash
-npx djai setup codex
+npx --package @daniel-aquino/djai djai setup codex
 ```
 
 Adds or updates the DJAI MCP server block in Codex config.
 
 ```bash
-npx djai help
+npx --package @daniel-aquino/djai djai help
 ```
 
 Prints CLI usage.
 
 ```bash
-npx djai-auth
+npx --package @daniel-aquino/djai djai-auth
 ```
 
 Runs the Spotify OAuth setup wizard.
@@ -223,7 +223,7 @@ If scopes change or Spotify reports insufficient scope, reauthorize:
 
 ```bash
 rm ~/.djai/token.json
-npx djai-auth
+npx --package @daniel-aquino/djai djai-auth
 ```
 
 If you are developing from source, use:
@@ -245,7 +245,7 @@ Common issues:
 
 - `No active device found`: open Spotify on a desktop, phone, or web player, start any playback once, then retry or transfer playback to that device.
 - `Spotify Premium required`: playback control endpoints require a Premium account.
-- `Missing Spotify client ID`: run `npx djai-auth` or set `SPOTIFY_CLIENT_ID`.
+- `Missing Spotify client ID`: run `npx --package @daniel-aquino/djai djai-auth` or set `SPOTIFY_CLIENT_ID`.
 - `Insufficient client scope`: remove `~/.djai/token.json`, run auth again, and restart your MCP client.
 - `Redirect URI mismatch`: make sure the Spotify app contains `http://127.0.0.1:8765/callback` exactly.
 

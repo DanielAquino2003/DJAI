@@ -5,7 +5,7 @@ import { upsertCodexConfig } from "../src/cli.js";
 const expectedBlock = [
   "[mcp_servers.djai]",
   'command = "npx"',
-  'args = ["-y", "djai"]',
+  'args = ["-y", "@daniel-aquino/djai"]',
   "startup_timeout_sec = 10",
   "tool_timeout_sec = 120",
   ""
@@ -39,5 +39,5 @@ test("upsertCodexConfig replaces an existing DJAI MCP block idempotently", () =>
   assert.match(next, /\[profile\.default\]/);
   assert.match(next, /\[mcp_servers\.other\]/);
   assert.equal((next.match(/\[mcp_servers\.djai\]/g) ?? []).length, 1);
-  assert.match(next, /args = \["-y", "djai"\]/);
+  assert.match(next, /args = \["-y", "@daniel-aquino\/djai"\]/);
 });
